@@ -4,7 +4,7 @@ import matplotlib.pyplot as plt
 
 # %% Pumps parameters
 Qin = lambda t: 1  # m3/s and t is in sec
-q = 10  # m3/s
+q = [10, 5, 10]  # m3/s
 Vmin = 10  # m3/s
 Vmax = 10000  # m3/s
 
@@ -14,17 +14,28 @@ T = 3600 * 24  # simulation time in sec
 
 # %% Simulation
 Nt = int(np.ceil(T / deltaT))
+Npumps = len(q)
 
 V = [Vmin]
-ps = [0]  # which pump is active
+ps = [[0] for _ in range(Npumps)]  # which pump is active
+last_active_pump = 0  # last active pump was the first one
+pump_active = False  # No pump is working
 for i in range(Nt - 1):
     t = i * deltaT
-    if ps[-1] == 1:  # Pump 1 is active
-        u = 1 if V[-1] >= Vmin else 0
-    else:
-        u = 1 if V[-1] >= Vmax else 0
-    ps.append(u)
-    Qout = q * u
+    if V[-1] >= Vmax and not pump_active:
+        last_active_pump += 1
+        last_active_pump %= Npumps
+    Qout = 0
+    for j in range(Npumps):
+        if j == last_active_pump:
+            if ps[j][-1] == 1:  # Pump j is active
+                u = 1 if V[-1] >= Vmin else 0
+            else:
+                u = 1 if V[-1] >= Vmax else 0
+        else:
+            u = 0
+        Qout += q[j] * u
+        ps[j].append(u)
     V.append(V[-1] + deltaT * (Qin(t) - Qout))
 
 # %% Plot
@@ -34,7 +45,9 @@ t = np.linspace(0, T, Nt)
 color = "tab:red"
 ax1.set_xlabel("Time [s]")
 ax1.set_ylabel("Pump active", color=color)
-ax1.plot(t, ps, color=color)
+ax1.plot(t, ps[0], color=color)
+ax1.plot(t, ps[1], color=color, linestyle="dotted")
+ax1.plot(t, ps[2], color=color, linestyle="dashed")
 ax1.tick_params(axis="y", labelcolor=color)
 
 ax2 = ax1.twinx()  # instantiate a second Axes that shares the same x-axis
