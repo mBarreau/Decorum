@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 # %% Pumps parameters
-Qin = lambda t: 1  # m3/s and t is in sec
+Qin = lambda t: 5 - 1 * np.cos(2 * np.pi * t / (3600 * 24))  # m3/s and t is in sec
 q = [10, 5, 10]  # m3/s
 Vmin = 10  # m3/s
 Vmax = 10000  # m3/s
@@ -36,6 +36,7 @@ for i in range(Nt - 1):
             u = 0
         Qout += q[j] * u
         ps[j].append(u)
+    pump_active = True if Qout > 0 else False
     V.append(V[-1] + deltaT * (Qin(t) - Qout))
 
 # %% Plot
